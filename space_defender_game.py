@@ -1,9 +1,22 @@
 import pygame
 import random
 import time
+import os
+
+high_score = 0
+
+# Load high score from file
+if os.path.exists("high_score.txt"):
+    with open("high_score.txt", "r") as file:
+        high_score = int(file.read())
 
 # Initialize pygame
 pygame.init()
+
+# Load and play background music
+pygame.mixer.music.load("background_music.mp3")  # Replace with your file name
+pygame.mixer.music.set_volume(0.5)               # Volume: 0.0 to 1.0
+# pygame.mixer.music.play(-1)                      # -1 means infinite loop
 
 # Define colors
 WHITE = (255, 255, 255)
@@ -60,12 +73,17 @@ def draw_button(screen, x, y, w, h, text, font, base_color, hover_color):
     return False
 
 # Game Over screen with restart/exit buttons
-def show_game_over_screen():
+def show_game_over_screen(score, high_score):
     large_font = pygame.font.SysFont(None, 72)
     medium_font = pygame.font.SysFont(None, 48)
-
+    pygame.mixer.music.stop()
     while True:
         screen.fill(BLACK)
+        score_text = font.render(f"Your Score: {score}", True, WHITE)
+        high_score_text = font.render(f"High Score: {high_score}", True, WHITE)
+        screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 2 - 100))
+        screen.blit(high_score_text, (WIDTH // 2 - high_score_text.get_width() // 2, HEIGHT // 2 - 60))
+
         game_over_text = large_font.render("GAME OVER", True, (255, 0, 0))
         screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 4))
 
@@ -82,7 +100,7 @@ def show_game_over_screen():
         if exit_clicked:
             pygame.quit()
             exit()
-
+        
         pygame.display.update()
 
 # Start screen
@@ -121,6 +139,8 @@ def show_start_screen():
 
 # Main game function
 def run_game():
+    if not pygame.mixer.music.get_busy():
+        pygame.mixer.music.play(-1)
     # Player starting position
     player_x = WIDTH // 2 - player_width // 2
     player_y = HEIGHT - player_height - 20
@@ -141,6 +161,7 @@ def run_game():
 
     # Score and state
     score = 0
+    global high_score
     game_over = False
     last_shot = 0
     cooldown = 200
@@ -210,17 +231,23 @@ def run_game():
         # Draw score
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (10, 10))
+        high_score_display = font.render(f"High Score: {high_score}", True, WHITE)
+        screen.blit(high_score_display, (WIDTH - high_score_display.get_width() - 10, 10))
 
         pygame.display.update()
 
         if game_over:
             pygame.time.delay(1000)
-            if show_game_over_screen():
+            if show_game_over_screen(score, high_score):
                 run_game()  # Restart
             return
+        # Update high score if needed
+        if score > high_score:
+            high_score = score
+            with open("high_score.txt", "w") as file:
+                file.write(str(high_score))
+
 
 # Show start screen and run the game
 show_start_screen()
 run_game()
-
-        y = random.randint(-1000, -40)
