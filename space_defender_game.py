@@ -156,11 +156,17 @@ def run_game():
 
     # Bullets
     bullets = []
+    enemy_bullets = []
+    enemy_bullet_width, enemy_bullet_height = 5, 10
+    enemy_bullet_speed = 5
+    enemy_shoot_delay = 1000  # milliseconds
+    last_enemy_shot_time = 0
     bullet_width, bullet_height = 5, 10
     bullet_speed = 7
 
     # Score and state
     score = 0
+    speed_increment_milestone = 0
     global high_score
     game_over = False
     last_shot = 0
@@ -207,6 +213,24 @@ def run_game():
                 enemy[1] = random.randint(-100, -40)
                 enemy[0] = random.randint(0, WIDTH - enemy_width)
 
+        current_time = pygame.time.get_ticks()
+        if score >= 50 and current_time - last_enemy_shot_time > enemy_shoot_delay:
+            for enemy in enemies:
+                if random.random() < 0.3:  # 30% chance to shoot per enemy
+                    bullet_x = enemy[0] + enemy_width // 2
+                    bullet_y = enemy[1] + enemy_height
+                    enemy_bullets.append([bullet_x, bullet_y])
+            last_enemy_shot_time = current_time
+        for bullet in enemy_bullets[:]:
+            bullet[1] += enemy_bullet_speed
+            pygame.draw.rect(screen, (255, 0, 0), (bullet[0], bullet[1], enemy_bullet_width, enemy_bullet_height))
+            if bullet[1] > HEIGHT:
+                enemy_bullets.remove(bullet)
+            elif pygame.Rect(bullet[0], bullet[1], enemy_bullet_width, enemy_bullet_height).colliderect(
+                pygame.Rect(player_x, player_y, player_width, player_height)):
+                game_over = True
+                break
+
         # Bullet-enemy collision
         for bullet in bullets[:]:
             bullet_rect = pygame.Rect(bullet[0], bullet[1], bullet_width, bullet_height)
@@ -216,11 +240,21 @@ def run_game():
                     bullets.remove(bullet)
                     enemies.remove(enemy)
                     score += 1
+
+                    # Speed up every 10 points
+                    if score % 10 == 0 and score > speed_increment_milestone:
+                        enemy_speed += 0.5  # or increase by 0.5 for smoother scaling
+                        speed_increment_milestone = score
+
                     enemies.append([random.randint(0, WIDTH - enemy_width), random.randint(-100, -40)])
                     break
 
+
         # Draw player
         screen.blit(spaceship_img, (player_x, player_y))
+        # Draw enemy bullets
+        for bullet in enemy_bullets:
+            pygame.draw.rect(screen, (255, 0, 0), (bullet[0], bullet[1], enemy_bullet_width, enemy_bullet_height))
 
         # Check for collision
         player_rect = pygame.Rect(player_x, player_y, player_width, player_height)
@@ -246,7 +280,9 @@ def run_game():
             high_score = score
             with open("high_score.txt", "w") as file:
                 file.write(str(high_score))
-
+            
+    
+        
 
 # Show start screen and run the game
 show_start_screen()
