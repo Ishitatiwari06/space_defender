@@ -248,7 +248,7 @@ def run_game():
                 enemy[0] = random.randint(0, WIDTH - enemy_width)
 
         current_time = pygame.time.get_ticks()
-        if score >= 50 and current_time - last_enemy_shot_time > enemy_shoot_delay:
+        if current_time - last_enemy_shot_time > enemy_shoot_delay:
             for enemy in enemies:
                 if random.random() < 0.3:  # 30% chance to shoot per enemy
                     bullet_x = enemy[0] + enemy_width // 2
