@@ -14,18 +14,17 @@ if os.path.exists("high_score.txt"):
 pygame.init()
 
 # Load and play background music
-pygame.mixer.music.load("background_music.mp3")  # Replace with your file name
+pygame.mixer.music.load("background_music.mp3") 
 pygame.mixer.music.set_volume(0.5)               # Volume: 0.0 to 1.0
-# pygame.mixer.music.play(-1)                      # -1 means infinite loop
+pygame.mixer.music.play(-1)                      # -1 means infinite loop
 
 # Define colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 # Setup FPS and clock
-FPS = 60
+FPS = 60 #frames per second
 clock = pygame.time.Clock()
-
 time.sleep(0.5)
 
 # Load sound and set volume
@@ -36,8 +35,7 @@ shoot_sound.set_volume(0.4)
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 info = pygame.display.Info()
 WIDTH, HEIGHT = info.current_w, info.current_h
-
-pygame.display.set_caption("Space Defender")
+pygame.display.set_caption("Space Defender")  #only displayed when switching b/w tabs or not inb full screen
 
 # Load and scale background image
 space_bg = pygame.image.load("space_bg.jpg")
@@ -53,7 +51,7 @@ player_width, player_height = spaceship_img.get_size()
 enemy_width, enemy_height = enemy_img.get_size()
 
 # Font
-font = pygame.font.SysFont(None, 36)
+font = pygame.font.SysFont(None, 36) 
 
 # Button drawing function
 def draw_button(screen, x, y, w, h, text, font, base_color, hover_color):
@@ -67,9 +65,9 @@ def draw_button(screen, x, y, w, h, text, font, base_color, hover_color):
             return True
     else:
         pygame.draw.rect(screen, base_color, rect)
-    text_render = font.render(text, True, WHITE)
+    text_render = font.render(text, True, WHITE) #true for smooth edges
     screen.blit(text_render, (x + (w - text_render.get_width()) // 2,
-                              y + (h - text_render.get_height()) // 2))
+                              y + (h - text_render.get_height()) // 2)) #horizontal center or vertical center
     return False
 
 # Game Over screen with restart/exit buttons
@@ -81,7 +79,7 @@ def show_game_over_screen(score, high_score):
         screen.fill(BLACK)
         score_text = font.render(f"Your Score: {score}", True, WHITE)
         high_score_text = font.render(f"High Score: {high_score}", True, WHITE)
-        screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 2 - 100))
+        screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 2 - 100)) #to center the text
         screen.blit(high_score_text, (WIDTH // 2 - high_score_text.get_width() // 2, HEIGHT // 2 - 60))
 
         game_over_text = large_font.render("GAME OVER", True, (255, 0, 0))
@@ -101,7 +99,7 @@ def show_game_over_screen(score, high_score):
             pygame.quit()
             exit()
         
-        pygame.display.update()
+        pygame.display.update() #or pygame.display.flip()
 
 # Start screen
 def show_start_screen():
@@ -112,38 +110,64 @@ def show_start_screen():
     button_color = (0, 128, 255)
     button_hover_color = (0, 180, 255)
     button_text = font.render("START GAME", True, WHITE)
-
+    quit_x = WIDTH // 2 - button_width // 2
+    quit_y = HEIGHT // 2 + 40
     while True:
         screen.fill(BLACK)
-
-        mouse = pygame.mouse.get_pos()
-        click = pygame.mouse.get_pressed()
-
-        if button_x < mouse[0] < button_x + button_width and button_y < mouse[1] < button_y + button_height:
-            pygame.draw.rect(screen, button_hover_color, (button_x, button_y, button_width, button_height))
-            if click[0] == 1:
-                pygame.time.delay(200)
-                return
-        else:
-            pygame.draw.rect(screen, button_color, (button_x, button_y, button_width, button_height))
-
+        if draw_button(screen, button_x, button_y, button_width, button_height, "START GAME", font, button_color, button_hover_color):
+            return
+        if draw_button(screen, quit_x, quit_y, button_width, button_height, "QUIT", font, button_color, button_hover_color):
+            pygame.quit()
+            exit()
         screen.blit(button_text, (button_x + button_width // 2 - button_text.get_width() // 2,
                                   button_y + button_height // 2 - button_text.get_height() // 2))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+        pygame.display.update()
+
+def show_pause_screen():
+    large_font = pygame.font.SysFont(None, 72)
+    medium_font = pygame.font.SysFont(None, 48)
+    paused = True
+
+    while paused:
+        screen.fill(BLACK)
+        pause_text = large_font.render("PAUSED", True, (255, 255, 0))
+        screen.blit(pause_text, (WIDTH // 2 - pause_text.get_width() // 2, HEIGHT // 4))
+
+        resume_clicked = draw_button(screen, WIDTH // 2 - 100, HEIGHT // 2, 200, 60, "RESUME", medium_font, (0, 128, 255), (0, 180, 255))
+        restart_clicked = draw_button(screen, WIDTH // 2 - 100, HEIGHT // 2 + 80, 200, 60, "RESTART", medium_font, (0, 128, 255), (0, 180, 255))
+        exit_clicked = draw_button(screen, WIDTH // 2 - 100, HEIGHT // 2 + 160, 200, 60, "EXIT", medium_font, (128, 0, 0), (180, 0, 0))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    exit()
+
+        if resume_clicked:
+            paused = False
+        if restart_clicked:
+            return "restart"
+        if exit_clicked:
+            pygame.quit()
+            exit()
 
         pygame.display.update()
+
 
 # Main game function
 def run_game():
     if not pygame.mixer.music.get_busy():
         pygame.mixer.music.play(-1)
     # Player starting position
-    player_x = WIDTH // 2 - player_width // 2
-    player_y = HEIGHT - player_height - 20
+    player_x = WIDTH // 2 - player_width // 2  #center
+    player_y = HEIGHT - player_height - 20     #bottom
     player_speed = 10
 
     # Enemy setup
@@ -174,8 +198,8 @@ def run_game():
     running = True
 
     while running:
-        clock.tick(FPS)
-        screen.blit(space_bg, (0, 0))
+        clock.tick(FPS)  #control game frame rate
+        screen.blit(space_bg, (0, 0)) #clear and redraw the background in every frame
 
         # Player movement by mouse
         mouse_x, _ = pygame.mouse.get_pos()
@@ -186,21 +210,31 @@ def run_game():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+            if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        exit()
+                    elif event.key == pygame.K_SPACE:
+                        # Pause the game and check if restart was clicked
+                        result = show_pause_screen()
+                        if result == "restart":
+                            return True  # to restart the game from run_game caller
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 pygame.quit()
                 exit()
-
+            #shooting bullets
             if event.type == pygame.MOUSEBUTTONDOWN:
                 current_time = pygame.time.get_ticks()
                 if current_time - last_shot > cooldown:
                     bullets.append([player_x + player_width // 2, player_y])
                     last_shot = current_time
                     shoot_sound.play()
+                
 
         # Move and draw bullets
         for bullet in bullets[:]:
-            bullet[1] -= bullet_speed
+            bullet[1] -= bullet_speed #make the bullet go upward
             pygame.draw.rect(screen, (0, 255, 0), (bullet[0], bullet[1], bullet_width, bullet_height))
             if bullet[1] < 0:
                 bullets.remove(bullet)
@@ -208,7 +242,7 @@ def run_game():
         # Move and draw enemies
         for enemy in enemies[:]:
             enemy[1] += enemy_speed
-            screen.blit(enemy_img, (enemy[0], enemy[1]))
+            screen.blit(enemy_img, (enemy[0], enemy[1])) #shift enemy as it move down
             if enemy[1] > HEIGHT:
                 enemy[1] = random.randint(-100, -40)
                 enemy[0] = random.randint(0, WIDTH - enemy_width)
@@ -243,7 +277,7 @@ def run_game():
 
                     # Speed up every 10 points
                     if score % 10 == 0 and score > speed_increment_milestone:
-                        enemy_speed += 0.5  # or increase by 0.5 for smoother scaling
+                        enemy_speed += 0.5  
                         speed_increment_milestone = score
 
                     enemies.append([random.randint(0, WIDTH - enemy_width), random.randint(-100, -40)])
@@ -263,8 +297,8 @@ def run_game():
                 game_over = True
 
         # Draw score
-        score_text = font.render(f"Score: {score}", True, WHITE)
-        screen.blit(score_text, (10, 10))
+        score_text = font.render(f"Score: {score}", True, WHITE) #text to render image
+        screen.blit(score_text, (10, 10)) #draw score text image at (10,10)
         high_score_display = font.render(f"High Score: {high_score}", True, WHITE)
         screen.blit(high_score_display, (WIDTH - high_score_display.get_width() - 10, 10))
 
@@ -286,4 +320,8 @@ def run_game():
 
 # Show start screen and run the game
 show_start_screen()
-run_game()
+while True:
+    restart = run_game()
+    if not restart:
+        break
+
